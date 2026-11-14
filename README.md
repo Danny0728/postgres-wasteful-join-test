@@ -1,0 +1,1 @@
+# postgres-wasteful-join-test
