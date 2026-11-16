@@ -4,7 +4,10 @@ Measuring what an unnecessary `JOIN` costs in PostgreSQL, using `EXPLAIN ANALYZE
 
 Two queries return exactly the same rows. One of them takes a detour through a table the result doesn't need. This repository has everything required to reproduce the comparison on your own machine in a few minutes.
 
-Article: _add the link here once it is published_
+Articles:
+
+1. [I Wrote a Wasteful JOIN on Purpose. It Ran Faster, Until It Didn't.](https://dev.to/danny0728/i-wrote-a-wasteful-join-on-purpose-it-ran-faster-until-it-didnt-2ifj)
+2. The Wasteful JOIN I Was Afraid to Write? GORM Wrote It for Me. _(add the link here once it is published)_
 
 ## The question
 
@@ -104,12 +107,52 @@ docker exec pgtest psql -U postgres -c "SET max_parallel_workers_per_gather = 0;
 - **`Gather` and `Workers Launched`** at the top of a plan. They mean the query ran on more than one CPU core, which can make a heavier plan finish sooner.
 - **`Execution Time`** at the bottom of each plan.
 
+## Part 2: the same task through GORM
+
+The second article writes the same task three ways in GORM, prints the SQL GORM generates for each, and compares the plans. The Go program runs in a container, so Docker is still all you need.
+
+If the `pgtest` container from Part 1 is still around, remove it first with `docker rm -f pgtest`.
+
+```bash
+# start PostgreSQL 16
+docker compose up -d --wait db
+
+# load 5 million users, addresses and orders
+docker exec pgtest psql -U postgres -v users=5000000 -v orders=5000000 -f /setup.sql
+
+# print GORM's SQL for each way, then its plan
+docker compose run --rm gorm
+
+# the same three statements, limited to one CPU core
+docker exec pgtest psql -U postgres -f /gorm-single-core.sql
+```
+
+The three ways are association joins (`Joins("User").Joins("User.Address")`), a hand-written join string, and a subquery.
+
+| | 1. Association joins | 2. Hand-written join | 3. Subquery |
+| --- | --- | --- | --- |
+| Default settings, median of 4 runs | 1,478 ms | 1,960 ms | 1,985 ms |
+| Single CPU core, 1 run | 4,271 ms | 1,817 ms | 1,866 ms |
+| Table pages read | About 102,400 | 70,504 | 70,504 |
+
+Association joins go through `users`, just like Query A in Part 1, and select the user and address columns for every order.
+
+To reset everything:
+
+```bash
+docker compose down -v
+```
+
 ## Files
 
 | File | What it does |
 | --- | --- |
 | `setup.sql` | Creates the tables and indexes and loads the data. Small by default; pass `-v users=... -v orders=...` for other sizes |
 | `queries.sql` | Runs Query A and Query B with `EXPLAIN ANALYZE` |
+| `docker-compose.yml` | Part 2: starts PostgreSQL and runs the Go program in a container |
+| `main.go` | Part 2: three ways to write the task in GORM; prints the SQL and the plan for each |
+| `gorm-single-core.sql` | Part 2: the three statements GORM generated, with parallel workers off |
+| `go.mod`, `go.sum` | Part 2: the Go module files, including the GORM version used |
 
 ## Clean up
 
