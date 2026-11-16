@@ -1,15 +1,16 @@
 services:
-  # PostgreSQL 16. On first start it runs setup.sql and loads the small dataset.
+  # PostgreSQL 16. Load the data yourself after it starts (see the README),
+  # so you can choose the dataset size.
   db:
     image: postgres:16
     container_name: pgtest
     environment:
       POSTGRES_PASSWORD: pass
     volumes:
-      - ./setup.sql:/docker-entrypoint-initdb.d/setup.sql:ro
+      - ./setup.sql:/setup.sql:ro
       - ./queries.sql:/queries.sql:ro
+      - ./gorm-single-core.sql:/gorm-single-core.sql:ro
     healthcheck:
-      # Checks over TCP, which only answers once setup.sql has finished loading.
       test: ["CMD-SHELL", "pg_isready -U postgres -h 127.0.0.1"]
       interval: 2s
       timeout: 3s
