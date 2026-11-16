@@ -1,0 +1,33 @@
+services:
+  # PostgreSQL 16. On first start it runs setup.sql and loads the small dataset.
+  db:
+    image: postgres:16
+    container_name: pgtest
+    environment:
+      POSTGRES_PASSWORD: pass
+    volumes:
+      - ./setup.sql:/docker-entrypoint-initdb.d/setup.sql:ro
+      - ./queries.sql:/queries.sql:ro
+    healthcheck:
+      # Checks over TCP, which only answers once setup.sql has finished loading.
+      test: ["CMD-SHELL", "pg_isready -U postgres -h 127.0.0.1"]
+      interval: 2s
+      timeout: 3s
+      retries: 60
+
+  # Runs main.go inside a Go container, so Go does not need to be set up locally.
+  gorm:
+    image: golang:1
+    working_dir: /app
+    volumes:
+      - .:/app
+      - gomod:/go/pkg/mod
+    environment:
+      DSN: host=db user=postgres password=pass dbname=postgres port=5432 sslmode=disable
+    depends_on:
+      db:
+        condition: service_healthy
+    command: sh -c "[ -f go.mod ] || go mod init gorm-test; go mod tidy && go run ."
+
+volumes:
+  gomod:
