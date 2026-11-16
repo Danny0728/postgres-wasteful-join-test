@@ -132,7 +132,8 @@ The three ways are association joins (`Joins("User").Joins("User.Address")`), a 
 | | 1. Association joins | 2. Hand-written join | 3. Subquery |
 | --- | --- | --- | --- |
 | Default settings, median of 4 runs | 1,478 ms | 1,960 ms | 1,985 ms |
-| Single CPU core, 1 run | 4,271 ms | 1,817 ms | 1,866 ms |
+| Single CPU core, run 1 | 4,271 ms | 1,817 ms | 1,866 ms |
+| Single CPU core, run 2 | 3,740 ms | 1,921 ms | 1,906 ms |
 | Table pages read | About 102,400 | 70,504 | 70,504 |
 
 Association joins go through `users`, just like Query A in Part 1, and select the user and address columns for every order.
