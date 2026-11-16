@@ -7,7 +7,7 @@ Two queries return exactly the same rows. One of them takes a detour through a t
 Articles:
 
 1. [I Wrote a Wasteful JOIN on Purpose. It Ran Faster, Until It Didn't.](https://dev.to/danny0728/i-wrote-a-wasteful-join-on-purpose-it-ran-faster-until-it-didnt-2ifj)
-2. The Wasteful JOIN I Was Afraid to Write? GORM Wrote It for Me. _(add the link here once it is published)_
+2. [The Wasteful JOIN I Was Afraid to Write? GORM Wrote It for Me.](https://dev.to/danny0728/the-wasteful-join-i-was-afraid-to-write-gorm-wrote-it-for-me-16ea)
 
 ## The question
 
